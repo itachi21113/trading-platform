@@ -1,15 +1,24 @@
-# IDE files
+# =================================================================
+# IDE and OS Files
+# =================================================================
 .idea/
 *.iml
 *.iws
+.vscode/
 
-# Maven build output
+# =================================================================
+# Maven/Java Build Output (from Spring Initializr)
+# =================================================================
 target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+HELP.md
 
-# Log files
+# =================================================================
+# Log and Secret Files
+# =================================================================
 *.log
-
-# Secrets (if any)
 .env
 
 # Ignore local application properties files for all services
