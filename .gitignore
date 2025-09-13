@@ -11,3 +11,6 @@ target/
 
 # Secrets (if any)
 .env
+
+# Ignore local application properties files for all services
+services/**/application.properties
