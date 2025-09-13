@@ -1,0 +1,13 @@
+# IDE files
+.idea/
+*.iml
+*.iws
+
+# Maven build output
+target/
+
+# Log files
+*.log
+
+# Secrets (if any)
+.env
