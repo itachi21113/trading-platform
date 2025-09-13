@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Real-Time Price Feed</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        background-color: #121212;
+        color: #e0e0e0;
+      }
+      #price-display {
+        font-size: 2rem;
+        margin-top: 20px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Live Bitcoin Price</h1>
+    <div id="price-display">Connecting...</div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
+    <script src="app.js"></script>
+  </body>
+</html>
