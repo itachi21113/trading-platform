@@ -19,6 +19,7 @@ HELP.md
 # Log and Secret Files
 # =================================================================
 *.log
+
 .env
 
 # Ignore local application properties files for all services
