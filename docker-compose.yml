@@ -36,5 +36,5 @@ services:
       - trading_db_data:/var/lib/postgresql/data # This saves your data even if the container stops
 
   # --- NEW VOLUME DEFINITION ---
-  volumes:
-    trading_db_data:
+volumes:
+  trading_db_data:
