@@ -73,3 +73,17 @@ export function updateChart(tick) {
     // This command tells Chart.js to redraw the chart with the new data
     priceChart.update('none'); // 'none' for a smooth animation
 }
+export function plotHistoricalData(ticks) {
+    // Clear any existing live data
+    priceChart.data.labels = [];
+    priceChart.data.datasets[0].data = [];
+
+    // Populate the chart with the historical data
+    ticks.forEach(tick => {
+        priceChart.data.labels.push(tick.timestamp);
+        priceChart.data.datasets[0].data.push(tick.price);
+    });
+
+    // Redraw the chart
+    priceChart.update();
+}

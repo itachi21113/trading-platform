@@ -3,6 +3,7 @@ package com.trading.price_streamer.controller;
 import com.trading.price_streamer.repository.PriceTickEntity;
 import com.trading.price_streamer.repository.PriceTickRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,6 +13,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @RestController // Marks this class as a REST controller
+@CrossOrigin
 public class HistoryController {
 
     @Autowired
