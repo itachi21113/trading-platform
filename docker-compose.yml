@@ -21,3 +21,20 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  db:
+    image: timescale/timescaledb:latest-pg14
+    container_name: timescaledb
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=trading_db
+    ports:
+      - "5432:5432" # Expose the standard PostgreSQL port to your machine
+    volumes:
+      - trading_db_data:/var/lib/postgresql/data # This saves your data even if the container stops
+
+  # --- NEW VOLUME DEFINITION ---
+  volumes:
+    trading_db_data:
