@@ -12,6 +12,26 @@
   <button id="historyBtn">24h History</button>
 </div>
 <div id="price-display">Connecting...</div>
+<div class="backtest-section">
+  <h2>SMA Crossover Backtester</h2>
+  <div class="backtest-inputs">
+    <div class="input-group">
+      <label for="initialBalance">Initial Balance ($)</label>
+      <input type="number" id="initialBalance" value="10000" />
+    </div>
+    <div class="input-group">
+      <label for="shortPeriod">Short SMA Period</label>
+      <input type="number" id="shortPeriod" value="10" />
+    </div>
+    <div class="input-group">
+      <label for="longPeriod">Long SMA Period</label>
+      <input type="number" id="longPeriod" value="30" />
+    </div>
+  </div>
+  <button id="runBacktestBtn">Run Backtest (24h)</button>
+  <div id="backtestResult" class="backtest-result">
+  </div>
+</div>
 
 <div class="chart-container">
   <canvas id="priceChart"></canvas>
