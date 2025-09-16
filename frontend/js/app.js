@@ -61,4 +61,48 @@ document.addEventListener('DOMContentLoaded', () => {
             priceDisplay.textContent = 'Failed to load history.';
         }
     });
+
+     // --- Backtesting UI Logic ---
+        const runBacktestBtn = document.getElementById('runBacktestBtn');
+        const backtestResultDiv = document.getElementById('backtestResult');
+        const initialBalanceInput = document.getElementById('initialBalance');
+        const shortPeriodInput = document.getElementById('shortPeriod');
+        const longPeriodInput = document.getElementById('longPeriod');
+
+        runBacktestBtn.addEventListener('click', async () => {
+            // Show a loading message
+            backtestResultDiv.style.display = 'block';
+            backtestResultDiv.innerHTML = '<p>Running backtest...</p>';
+
+            // Get the dynamic values from the input fields
+            const initialBalance = initialBalanceInput.value;
+            const shortPeriod = shortPeriodInput.value;
+            const longPeriod = longPeriodInput.value;
+
+            try {
+                // Construct the dynamic URL and fetch the data
+                const url = `http://localhost:8081/backtest/sma-crossover?initialBalance=${initialBalance}&shortPeriod=${shortPeriod}&longPeriod=${longPeriod}&range=24h`;
+                const response = await fetch(url);
+                const result = await response.json();
+
+                // Determine if the result is a profit or loss for styling
+                const pnlClass = result.profitOrLoss >= 0 ? 'profit' : 'loss';
+
+                // Format and display the results
+                backtestResultDiv.innerHTML = `
+                    <p><strong>Strategy:</strong> ${result.strategy}</p>
+                    <p><strong>Initial Balance:</strong> $${result.initialBalance.toLocaleString()}</p>
+                    <p><strong>Final Balance:</strong> $${result.finalBalance.toLocaleString()}</p>
+                    <p><strong>Total Trades:</strong> ${result.totalTrades}</p>
+                    <p class="${pnlClass}">
+                        <strong>Profit/Loss:</strong> $${result.profitOrLoss.toLocaleString()} (${result.profitPercentage.toFixed(2)}%)
+                    </p>
+                `;
+
+            } catch (error) {
+                console.error('Backtest failed:', error);
+                backtestResultDiv.innerHTML = '<p class="loss">Error running backtest. See console for details.</p>';
+            }
+        });
+
 });
