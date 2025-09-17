@@ -2,6 +2,7 @@ package com.trading.price_streamer;
 
 import com.trading.price_streamer.repository.PriceTickEntity;
 import com.trading.price_streamer.repository.PriceTickRepository;
+import com.trading.price_streamer.service.AlertService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate; // <-- Import this
@@ -18,6 +19,9 @@ public class PriceStreamService {
 
     @Autowired
     private PriceTickRepository priceTickRepository;
+
+    @Autowired
+    private AlertService alertService;
 
 
     @KafkaListener(topics = "price-ticks", groupId = "price-streamer-group")
@@ -36,5 +40,6 @@ public class PriceStreamService {
         // Print to the console (we can keep this for logging)
         System.out.println("Received price tick: " + tick);
         messagingTemplate.convertAndSend("/topic/prices", tick);
+        alertService.checkAndTriggerAlerts(tick);
     }
 }
