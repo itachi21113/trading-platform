@@ -19,8 +19,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   const backtestResultDiv = document.getElementById("backtestResult");
   const loginBtn = document.getElementById("loginBtn");
   const logoutBtn = document.getElementById("logoutBtn");
-
-  // 👇 --- NEW: ALERT UI ELEMENTS --- 👇
   const createAlertBtn = document.getElementById("createAlertBtn");
   const alertConditionSelect = document.getElementById("alertCondition");
   const alertPriceInput = document.getElementById("alertPrice");
@@ -29,8 +27,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // --- Auth0 Configuration & Initialization ---
   await configureClient();
-  await handleRedirectCallback(); // Handle the redirect from Auth0
-  await updateUI(); // Update UI based on initial auth state
+  await handleRedirectCallback();
+  await updateUI();
 
   // --- Event Listeners ---
   loginBtn.addEventListener("click", login);
@@ -48,12 +46,23 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (authenticated) {
       features.forEach((el) => (el.style.display = ""));
-      fetchAndDisplayAlerts(); // Load alerts now that the user is logged in
+      fetchAndDisplayAlerts();
 
       if (!stompClient) {
+        const token = await getAccessToken();
         const socket = new SockJS("http://localhost:8081/ws");
         stompClient = Stomp.over(socket);
-        stompClient.connect({}, (frame) => {
+
+        // This object holds our authentication token
+        const headers = {
+          Authorization: `Bearer ${token}`,
+        };
+
+        // *** THIS IS THE FIX ***
+        // We now pass the 'headers' object to the connect function.
+        stompClient.connect(headers, (frame) => {
+          console.log("WebSocket Connected with Auth:", frame);
+
           // Public price subscription
           stompClient.subscribe("/topic/prices", (message) => {
             const tick = JSON.parse(message.body);
@@ -61,12 +70,14 @@ document.addEventListener("DOMContentLoaded", async () => {
             updateChart(tick);
           });
 
-          // 👇 --- NEW: Private subscription for user-specific notifications --- 👇
+          // Private subscription for user-specific notifications
           stompClient.subscribe("/user/queue/notifications", (message) => {
+            console.log("Received private notification:", message.body);
             showToastNotification(message.body);
-            // Refresh the list of active alerts since one was just triggered
             fetchAndDisplayAlerts();
           });
+        }, (error) => {
+            console.error("WebSocket connection error:", error);
         });
       }
     } else {
@@ -87,12 +98,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    // Handle cases where there might be no content
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.indexOf("application/json") !== -1) {
       return response.json();
     }
-    return; // Return nothing for non-json responses
+    return;
   }
 
   // --- Chart and Backtesting Logic ---
@@ -141,9 +151,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         <p><strong>Final Balance:</strong> $${result.finalBalance.toLocaleString()}</p>
         <p><strong>Total Trades:</strong> ${result.totalTrades}</p>
         <p class="${pnlClass}">
-            <strong>Profit/Loss:</strong> $${result.profitOrLoss.toLocaleString()} (${result.profitPercentage.toFixed(
-        2
-      )}%)
+            <strong>Profit/Loss:</strong> $${result.profitOrLoss.toLocaleString()} (${result.profitPercentage.toFixed(2)}%)
         </p>`;
     } catch (error) {
       console.error("Backtest failed:", error);
@@ -152,12 +160,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // 👇 --- NEW: Alerts Logic --- 👇
-
+  // --- Alerts Logic ---
   async function fetchAndDisplayAlerts() {
     try {
       const alerts = await fetchSecurely("http://localhost:8081/api/alerts");
-      activeAlertsList.innerHTML = ""; // Clear the list first
+      activeAlertsList.innerHTML = "";
       if (alerts.length === 0) {
         activeAlertsList.innerHTML = "<li>No active alerts.</li>";
       } else {
@@ -176,24 +183,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   createAlertBtn.addEventListener("click", async () => {
-    const symbol = "BTC-USD"; // Hardcoded for now
+    const symbol = "BTC-USD";
     const condition = alertConditionSelect.value;
     const targetPrice = alertPriceInput.value;
-
     if (!targetPrice) {
       alert("Please enter a target price.");
       return;
     }
-
     try {
       await fetchSecurely("http://localhost:8081/api/alerts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ symbol, condition, targetPrice }),
       });
-
-      alertPriceInput.value = ""; // Clear the input
-      fetchAndDisplayAlerts(); // Refresh the list
+      alertPriceInput.value = "";
+      fetchAndDisplayAlerts();
     } catch (error) {
       console.error("Failed to create alert:", error);
       alert("Error creating alert.");
@@ -205,6 +209,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     notificationToast.classList.add("show");
     setTimeout(() => {
       notificationToast.classList.remove("show");
-    }, 5000); // Hide after 5 seconds
+    }, 5000);
   }
 });

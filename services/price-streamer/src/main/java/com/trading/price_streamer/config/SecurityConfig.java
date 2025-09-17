@@ -23,7 +23,7 @@ public class SecurityConfig {
                 .cors(withDefaults())
                 // Define which requests to protect
                 .authorizeHttpRequests(authorize -> authorize
-                        // Allow the WebSocket endpoint to be accessed by anyone
+                        // Allow the WebSocket endpoint to be accessed by anyone (we secure it separately)
                         .requestMatchers("/ws/**").permitAll()
                         // Any other request must be authenticated (i.e., have a valid token)
                         .anyRequest().authenticated()
@@ -35,7 +35,6 @@ public class SecurityConfig {
 
         return http.build();
     }
-    // In SecurityConfig.java
 
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
@@ -43,9 +42,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of("http://127.0.0.1:5501", "http://localhost:5501"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
-
         configuration.setAllowCredentials(true);
-
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
