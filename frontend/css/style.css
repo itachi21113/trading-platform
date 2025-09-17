@@ -201,3 +201,31 @@ body {
   visibility: visible;
   opacity: 1;
 }
+/* ... existing styles ... */
+#price-display {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+#aiSignal {
+  font-size: 1.5rem;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+.signal-up {
+  color: #121212;
+  background-color: #4caf50; /* Green */
+}
+
+.signal-down {
+  color: #121212;
+  background-color: #f44336; /* Red */
+}
+
+.signal-error {
+  color: #121212;
+  background-color: #f5b041; /* Orange/Yellow */
+}

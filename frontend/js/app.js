@@ -12,7 +12,8 @@ import {
 document.addEventListener("DOMContentLoaded", async () => {
   let stompClient = null;
   // --- UI Element References ---
-  const priceDisplay = document.getElementById("price-display");
+  const livePriceSpan = document.getElementById("livePrice");
+  const aiSignalSpan = document.getElementById("aiSignal");
   const liveBtn = document.getElementById("liveBtn");
   const historyBtn = document.getElementById("historyBtn");
   const runBacktestBtn = document.getElementById("runBacktestBtn");
@@ -52,56 +53,68 @@ document.addEventListener("DOMContentLoaded", async () => {
         const token = await getAccessToken();
         const socket = new SockJS("http://localhost:8081/ws");
         stompClient = Stomp.over(socket);
+        const headers = { Authorization: `Bearer ${token}` };
 
-        // This object holds our authentication token
-        const headers = {
-          Authorization: `Bearer ${token}`,
-        };
+        stompClient.connect(
+          headers,
+          (frame) => {
+            console.log("WebSocket Connected with Auth:", frame);
 
-        // *** THIS IS THE FIX ***
-        // We now pass the 'headers' object to the connect function.
-        stompClient.connect(headers, (frame) => {
-          console.log("WebSocket Connected with Auth:", frame);
+            stompClient.subscribe("/topic/prices", (message) => {
+              const tick = JSON.parse(message.body);
+              // **CORRECTION HERE**
+              livePriceSpan.textContent = `$${tick.price.toFixed(2)}`;
+              updateChart(tick);
+            });
 
-          // Public price subscription
-          stompClient.subscribe("/topic/prices", (message) => {
-            const tick = JSON.parse(message.body);
-            priceDisplay.textContent = `$${tick.price.toFixed(2)}`;
-            updateChart(tick);
-          });
+            stompClient.subscribe("/user/queue/notifications", (message) => {
+              console.log("Received private notification:", message.body);
+              showToastNotification(message.body);
+              fetchAndDisplayAlerts();
+            });
 
-          // Private subscription for user-specific notifications
-          stompClient.subscribe("/user/queue/notifications", (message) => {
-            console.log("Received private notification:", message.body);
-            showToastNotification(message.body);
-            fetchAndDisplayAlerts();
-          });
-        }, (error) => {
+            stompClient.subscribe("/topic/predictions", (message) => {
+              const prediction = message.body;
+              aiSignalSpan.textContent = `AI Signal: ${prediction}`;
+              aiSignalSpan.classList.remove(
+                "signal-up",
+                "signal-down",
+                "signal-error"
+              );
+              if (prediction === "UP") {
+                aiSignalSpan.textContent += " ▲";
+                aiSignalSpan.classList.add("signal-up");
+              } else if (prediction === "DOWN") {
+                aiSignalSpan.textContent += " ▼";
+                aiSignalSpan.classList.add("signal-down");
+              } else {
+                aiSignalSpan.classList.add("signal-error");
+              }
+            });
+          },
+          (error) => {
             console.error("WebSocket connection error:", error);
-        });
+          }
+        );
       }
     } else {
       features.forEach((el) => (el.style.display = "none"));
-      priceDisplay.style.display = "";
-      priceDisplay.textContent = "Please log in to see the data.";
+      // **CORRECTION HERE**
+      const priceDisplayDiv = document.getElementById("price-display");
+      if (priceDisplayDiv) priceDisplayDiv.style.display = "";
+      livePriceSpan.textContent = "Please log in to see the data.";
     }
   }
 
   // --- Secure Fetch Function ---
   async function fetchSecurely(url, options = {}) {
     const token = await getAccessToken();
-    const headers = {
-      ...options.headers,
-      Authorization: `Bearer ${token}`,
-    };
+    const headers = { ...options.headers, Authorization: `Bearer ${token}` };
     const response = await fetch(url, { ...options, headers });
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const contentType = response.headers.get("content-type");
-    if (contentType && contentType.indexOf("application/json") !== -1) {
+    if (contentType && contentType.indexOf("application/json") !== -1)
       return response.json();
-    }
     return;
   }
 
@@ -111,7 +124,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   historyBtn.addEventListener("click", async () => {
     historyBtn.classList.add("active");
     liveBtn.classList.remove("active");
-    priceDisplay.textContent = "Loading history...";
+    livePriceSpan.textContent = "Loading history...";
     try {
       const historicalTicks = await fetchSecurely(
         "http://localhost:8081/history?symbol=BTC-USD&range=24h"
@@ -119,12 +132,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       plotHistoricalData(historicalTicks);
       if (historicalTicks.length > 0) {
         const latestTick = historicalTicks[historicalTicks.length - 1];
-        priceDisplay.textContent = `$${latestTick.price.toFixed(2)}`;
+        livePriceSpan.textContent = `$${latestTick.price.toFixed(2)}`;
       } else {
-        priceDisplay.textContent = "No historical data found.";
+        livePriceSpan.textContent = "No historical data found.";
       }
     } catch (error) {
-      priceDisplay.textContent = "Failed to load history.";
+      livePriceSpan.textContent = "Failed to load history.";
       console.error("Failed to fetch historical data:", error);
     }
   });
@@ -132,7 +145,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   liveBtn.addEventListener("click", () => {
     liveBtn.classList.add("active");
     historyBtn.classList.remove("active");
-    priceDisplay.textContent = "Waiting for live data...";
+    // **CORRECTION HERE**
+    livePriceSpan.textContent = "Waiting for live data...";
   });
 
   runBacktestBtn.addEventListener("click", async () => {
@@ -151,7 +165,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         <p><strong>Final Balance:</strong> $${result.finalBalance.toLocaleString()}</p>
         <p><strong>Total Trades:</strong> ${result.totalTrades}</p>
         <p class="${pnlClass}">
-            <strong>Profit/Loss:</strong> $${result.profitOrLoss.toLocaleString()} (${result.profitPercentage.toFixed(2)}%)
+            <strong>Profit/Loss:</strong> $${result.profitOrLoss.toLocaleString()} (${result.profitPercentage.toFixed(
+        2
+      )}%)
         </p>`;
     } catch (error) {
       console.error("Backtest failed:", error);

@@ -21,6 +21,10 @@ HELP.md
 *.log
 
 .env
+services/**/.env
 
 # Ignore local application properties files for all services
 services/**/application.properties
+
+# This command adds the line "venv/" to your .gitignore file
+venv/
