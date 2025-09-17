@@ -133,3 +133,71 @@ body {
   color: white;
   border-radius: 4px;
 }
+
+/* ... existing styles ... */
+
+.alerts-section {
+  width: 80vw;
+  max-width: 900px;
+  margin-top: 30px;
+  padding: 20px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background-color: #1e1e1e;
+}
+
+.alerts-section h2,
+.alerts-section h3 {
+  text-align: center;
+}
+
+.alert-form {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.alert-form select,
+.alert-form input {
+  padding: 8px;
+  background-color: #333;
+  border: 1px solid #555;
+  color: #e0e0e0;
+  border-radius: 4px;
+}
+
+#activeAlertsList {
+  list-style: none;
+  padding: 0;
+}
+
+#activeAlertsList li {
+  background-color: #2c2c2c;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* --- Toast Notification Styles --- */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #4caf50;
+  color: white;
+  padding: 15px;
+  border-radius: 5px;
+  z-index: 1000;
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0s, opacity 0.5s linear;
+}
+
+.toast.show {
+  visibility: visible;
+  opacity: 1;
+}

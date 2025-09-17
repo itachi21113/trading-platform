@@ -19,12 +19,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   const backtestResultDiv = document.getElementById("backtestResult");
   const loginBtn = document.getElementById("loginBtn");
   const logoutBtn = document.getElementById("logoutBtn");
-  const mainContent = document.querySelector(".main-content"); // We will add this class in HTML
+  const createAlertBtn = document.getElementById("createAlertBtn");
+  const alertConditionSelect = document.getElementById("alertCondition");
+  const alertPriceInput = document.getElementById("alertPrice");
+  const activeAlertsList = document.getElementById("activeAlertsList");
+  const notificationToast = document.getElementById("notificationToast");
 
   // --- Auth0 Configuration & Initialization ---
   await configureClient();
-  await handleRedirectCallback(); // Handle the redirect from Auth0
-  updateUI(); // Update UI based on initial auth state
+  await handleRedirectCallback();
+  await updateUI();
 
   // --- Event Listeners ---
   loginBtn.addEventListener("click", login);
@@ -36,72 +40,83 @@ document.addEventListener("DOMContentLoaded", async () => {
     loginBtn.style.display = authenticated ? "none" : "block";
     logoutBtn.style.display = authenticated ? "block" : "none";
 
-    // Hide or show the main application content
     const features = document.querySelectorAll(
-      ".chart-controls, .price-display, .backtest-section, .chart-container"
+      ".chart-controls, #price-display, .backtest-section, .chart-container, .alerts-section"
     );
-    features.forEach((el) => {
-      el.style.display = authenticated ? "" : "none";
-    });
 
     if (authenticated) {
-      // Show all the features
       features.forEach((el) => (el.style.display = ""));
+      fetchAndDisplayAlerts();
 
-      // --- PASTE THE WEBSOCKET CODE HERE ---
-      // And only connect if we haven't already
       if (!stompClient) {
+        const token = await getAccessToken();
         const socket = new SockJS("http://localhost:8081/ws");
         stompClient = Stomp.over(socket);
-        stompClient.connect({}, (frame) => {
+
+        // This object holds our authentication token
+        const headers = {
+          Authorization: `Bearer ${token}`,
+        };
+
+        // *** THIS IS THE FIX ***
+        // We now pass the 'headers' object to the connect function.
+        stompClient.connect(headers, (frame) => {
+          console.log("WebSocket Connected with Auth:", frame);
+
+          // Public price subscription
           stompClient.subscribe("/topic/prices", (message) => {
             const tick = JSON.parse(message.body);
             priceDisplay.textContent = `$${tick.price.toFixed(2)}`;
             updateChart(tick);
           });
+
+          // Private subscription for user-specific notifications
+          stompClient.subscribe("/user/queue/notifications", (message) => {
+            console.log("Received private notification:", message.body);
+            showToastNotification(message.body);
+            fetchAndDisplayAlerts();
+          });
+        }, (error) => {
+            console.error("WebSocket connection error:", error);
         });
       }
     } else {
-      // Hide all the features
       features.forEach((el) => (el.style.display = "none"));
-      // And show the login message
-      priceDisplay.style.display = ""; // Make sure the price display itself is visible
+      priceDisplay.style.display = "";
       priceDisplay.textContent = "Please log in to see the data.";
     }
   }
 
   // --- Secure Fetch Function ---
-  async function fetchSecurely(url) {
+  async function fetchSecurely(url, options = {}) {
     const token = await getAccessToken();
-    const response = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const headers = {
+      ...options.headers,
+      Authorization: `Bearer ${token}`,
+    };
+    const response = await fetch(url, { ...options, headers });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response.json();
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.indexOf("application/json") !== -1) {
+      return response.json();
+    }
+    return;
   }
 
-  // --- Existing Logic (Now using fetchSecurely) ---
+  // --- Chart and Backtesting Logic ---
   initChart();
 
-  // In frontend/js/app.js
-
   historyBtn.addEventListener("click", async () => {
-    // Update button styles
     historyBtn.classList.add("active");
     liveBtn.classList.remove("active");
     priceDisplay.textContent = "Loading history...";
-
     try {
       const historicalTicks = await fetchSecurely(
         "http://localhost:8081/history?symbol=BTC-USD&range=24h"
       );
       plotHistoricalData(historicalTicks);
-
-      // Update the display with the latest historical price
       if (historicalTicks.length > 0) {
         const latestTick = historicalTicks[historicalTicks.length - 1];
         priceDisplay.textContent = `$${latestTick.price.toFixed(2)}`;
@@ -114,51 +129,86 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // In frontend/js/app.js
-
   liveBtn.addEventListener("click", () => {
-    // Update button styles to show "Live" is active
     liveBtn.classList.add("active");
     historyBtn.classList.remove("active");
     priceDisplay.textContent = "Waiting for live data...";
-
-    // The WebSocket will automatically take over from here
   });
 
-  // In frontend/js/app.js
-
   runBacktestBtn.addEventListener("click", async () => {
-    // Show a loading message
     backtestResultDiv.style.display = "block";
     backtestResultDiv.innerHTML = "<p>Running backtest...</p>";
-
-    // Get the actual values from the input fields
     const initialBalance = document.getElementById("initialBalance").value;
     const shortPeriod = document.getElementById("shortPeriod").value;
     const longPeriod = document.getElementById("longPeriod").value;
-
     try {
-      // Construct the correct, dynamic URL
       const url = `http://localhost:8081/backtest/sma-crossover?initialBalance=${initialBalance}&shortPeriod=${shortPeriod}&longPeriod=${longPeriod}&range=24h`;
       const result = await fetchSecurely(url);
-
-      // This is the logic to display the results in the UI
       const pnlClass = result.profitOrLoss >= 0 ? "profit" : "loss";
       backtestResultDiv.innerHTML = `
-               <p><strong>Strategy:</strong> ${result.strategy}</p>
-               <p><strong>Initial Balance:</strong> $${result.initialBalance.toLocaleString()}</p>
-               <p><strong>Final Balance:</strong> $${result.finalBalance.toLocaleString()}</p>
-               <p><strong>Total Trades:</strong> ${result.totalTrades}</p>
-               <p class="${pnlClass}">
-                   <strong>Profit/Loss:</strong> $${result.profitOrLoss.toLocaleString()} (${result.profitPercentage.toFixed(
-        2
-      )}%)
-               </p>
-           `;
+        <p><strong>Strategy:</strong> ${result.strategy}</p>
+        <p><strong>Initial Balance:</strong> $${result.initialBalance.toLocaleString()}</p>
+        <p><strong>Final Balance:</strong> $${result.finalBalance.toLocaleString()}</p>
+        <p><strong>Total Trades:</strong> ${result.totalTrades}</p>
+        <p class="${pnlClass}">
+            <strong>Profit/Loss:</strong> $${result.profitOrLoss.toLocaleString()} (${result.profitPercentage.toFixed(2)}%)
+        </p>`;
     } catch (error) {
       console.error("Backtest failed:", error);
       backtestResultDiv.innerHTML =
         '<p class="loss">Error running backtest. See console for details.</p>';
     }
   });
+
+  // --- Alerts Logic ---
+  async function fetchAndDisplayAlerts() {
+    try {
+      const alerts = await fetchSecurely("http://localhost:8081/api/alerts");
+      activeAlertsList.innerHTML = "";
+      if (alerts.length === 0) {
+        activeAlertsList.innerHTML = "<li>No active alerts.</li>";
+      } else {
+        alerts.forEach((alert) => {
+          const li = document.createElement("li");
+          li.textContent = `Notify when ${
+            alert.symbol
+          } is ${alert.alertCondition.toLowerCase()} $${alert.targetPrice.toLocaleString()}`;
+          activeAlertsList.appendChild(li);
+        });
+      }
+    } catch (error) {
+      console.error("Failed to fetch alerts:", error);
+      activeAlertsList.innerHTML = "<li>Error loading alerts.</li>";
+    }
+  }
+
+  createAlertBtn.addEventListener("click", async () => {
+    const symbol = "BTC-USD";
+    const condition = alertConditionSelect.value;
+    const targetPrice = alertPriceInput.value;
+    if (!targetPrice) {
+      alert("Please enter a target price.");
+      return;
+    }
+    try {
+      await fetchSecurely("http://localhost:8081/api/alerts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ symbol, condition, targetPrice }),
+      });
+      alertPriceInput.value = "";
+      fetchAndDisplayAlerts();
+    } catch (error) {
+      console.error("Failed to create alert:", error);
+      alert("Error creating alert.");
+    }
+  });
+
+  function showToastNotification(message) {
+    notificationToast.textContent = message;
+    notificationToast.classList.add("show");
+    setTimeout(() => {
+      notificationToast.classList.remove("show");
+    }, 5000);
+  }
 });
