@@ -1,9 +1,9 @@
 package com.trading.price_streamer.controller;
 
-import com.trading.price_streamer.model.BacktestResult;
-import com.trading.price_streamer.repository.PriceTickEntity;
-import com.trading.price_streamer.repository.PriceTickRepository;
-import com.trading.price_streamer.service.BacktestingService;
+import com.trading.price_streamer.domain.backtest.BacktestResult;
+import com.trading.price_streamer.domain.common.PriceTickEntity;
+import com.trading.price_streamer.domain.common.PriceTickRepository;
+import com.trading.price_streamer.domain.backtest.BacktestingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;

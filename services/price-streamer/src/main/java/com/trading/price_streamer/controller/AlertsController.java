@@ -1,8 +1,8 @@
 package com.trading.price_streamer.controller;
 
 import com.trading.price_streamer.model.CreateAlertRequest;
-import com.trading.price_streamer.repository.AlertEntity;
-import com.trading.price_streamer.service.AlertService;
+import com.trading.price_streamer.domain.alert.AlertEntity;
+import com.trading.price_streamer.domain.alert.AlertService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

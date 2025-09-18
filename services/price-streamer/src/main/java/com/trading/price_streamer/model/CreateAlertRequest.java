@@ -1,5 +1,6 @@
 package com.trading.price_streamer.model;
 
+import com.trading.price_streamer.domain.alert.AlertCondition;
 import lombok.Data;
 import java.math.BigDecimal;
 

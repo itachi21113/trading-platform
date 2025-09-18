@@ -1,8 +1,7 @@
-package com.trading.price_streamer.service;
+package com.trading.price_streamer.domain.backtest;
 
-import com.trading.price_streamer.model.BacktestResult;
-import com.trading.price_streamer.model.Signal;
-import com.trading.price_streamer.repository.PriceTickEntity;
+import com.trading.price_streamer.domain.common.Signal;
+import com.trading.price_streamer.domain.common.PriceTickEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;

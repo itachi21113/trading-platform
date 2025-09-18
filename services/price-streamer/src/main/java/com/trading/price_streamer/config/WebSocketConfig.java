@@ -1,4 +1,4 @@
-package com.trading.price_streamer;
+package com.trading.price_streamer.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;

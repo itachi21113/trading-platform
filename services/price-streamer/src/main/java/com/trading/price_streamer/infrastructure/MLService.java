@@ -1,6 +1,6 @@
-package com.trading.price_streamer.service;
+package com.trading.price_streamer.infrastructure;
 
-import com.trading.price_streamer.repository.PriceTickEntity;
+import com.trading.price_streamer.domain.common.PriceTickEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
