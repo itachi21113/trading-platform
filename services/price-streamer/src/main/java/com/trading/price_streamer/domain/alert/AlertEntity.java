@@ -1,7 +1,5 @@
-package com.trading.price_streamer.repository;
+package com.trading.price_streamer.domain.alert;
 
-import com.trading.price_streamer.model.AlertCondition;
-import com.trading.price_streamer.model.AlertStatus;
 import jakarta.persistence.*;
 import lombok.Data;
 

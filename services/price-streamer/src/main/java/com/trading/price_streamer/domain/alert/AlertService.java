@@ -1,11 +1,7 @@
-package com.trading.price_streamer.service;
+package com.trading.price_streamer.domain.alert;
 
-import com.trading.price_streamer.PriceTick;
-import com.trading.price_streamer.model.AlertCondition;
-import com.trading.price_streamer.model.AlertStatus;
+import com.trading.price_streamer.domain.common.PriceTick;
 import com.trading.price_streamer.model.CreateAlertRequest;
-import com.trading.price_streamer.repository.AlertEntity;
-import com.trading.price_streamer.repository.AlertRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -46,7 +42,7 @@ public class AlertService {
      */
     public List<AlertEntity> getActiveAlertsForUser(String userId) {
         // We will implement this query method in the repository next
-        return alertRepository.findByUserIdAndStatus(userId, com.trading.price_streamer.model.AlertStatus.ACTIVE);
+        return alertRepository.findByUserIdAndStatus(userId, AlertStatus.ACTIVE);
     }
 
     public void checkAndTriggerAlerts(PriceTick tick) {

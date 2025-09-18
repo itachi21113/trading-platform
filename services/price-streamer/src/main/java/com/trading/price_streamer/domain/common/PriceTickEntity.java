@@ -1,4 +1,4 @@
-package com.trading.price_streamer.repository;
+package com.trading.price_streamer.domain.common;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

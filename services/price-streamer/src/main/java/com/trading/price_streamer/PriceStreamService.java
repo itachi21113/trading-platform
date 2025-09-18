@@ -1,9 +1,10 @@
 package com.trading.price_streamer;
 
-import com.trading.price_streamer.repository.PriceTickEntity;
-import com.trading.price_streamer.repository.PriceTickRepository;
-import com.trading.price_streamer.service.AlertService;
-import com.trading.price_streamer.service.MLService;
+import com.trading.price_streamer.domain.common.PriceTick;
+import com.trading.price_streamer.domain.common.PriceTickEntity;
+import com.trading.price_streamer.domain.common.PriceTickRepository;
+import com.trading.price_streamer.domain.alert.AlertService;
+import com.trading.price_streamer.infrastructure.MLService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate; // <-- Import this
