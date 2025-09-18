@@ -32,7 +32,9 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
 
       - name: Build and Test Java Services
-        run: ./services/price-producer/mvnw -B test && ./services/price-streamer/mvnw -B test
+        run: |
+          ./services/price-producer/mvnw -B -f ./services/price-producer/pom.xml test
+          ./services/price-streamer/mvnw -B -f ./services/price-streamer/pom.xml test
 
       - name: Install Python Dependencies
         run: pip install -r ./services/ml-service/requirements.txt
