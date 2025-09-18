@@ -1,4 +1,5 @@
 services:
+  # --- Infrastructure Services ---
   zookeeper:
     image: confluentinc/cp-zookeeper:7.3.0
     container_name: zookeeper
@@ -31,10 +32,56 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=trading_db
     ports:
-      - "5432:5432" # Expose the standard PostgreSQL port to your machine
+      - "5432:5432"
     volumes:
-      - trading_db_data:/var/lib/postgresql/data # This saves your data even if the container stops
+      - trading_db_data:/var/lib/postgresql/data
 
-  # --- NEW VOLUME DEFINITION ---
+  # --- Application Services ---
+  price-producer:
+    build: ./services/price-producer
+    container_name: price-producer
+    depends_on:
+      - kafka
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+
+  ml-service:
+    build: ./services/ml-service
+    container_name: ml-service
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=trading_db
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "8000:8000"
+
+  price-streamer:
+    build: ./services/price-streamer
+    container_name: price-streamer
+    depends_on:
+      - kafka
+      - db
+      - ml-service
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/trading_db
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - ML_SERVICE_URL=http://ml-service:8000
+      # Auth0 configuration (replace with your actual values)
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=https://dev-ic7b0akl6h55q8wb.us.auth0.com/
+    ports:
+      - "8081:8081"
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "80:80" # Maps the container's port 80 to your machine's port 80
+
 volumes:
   trading_db_data:
