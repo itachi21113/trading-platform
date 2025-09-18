@@ -1,61 +1,89 @@
-let auth0Client = null;
+let priceChart; // This variable will hold our chart instance
 
 /**
- * Configures and initializes the Auth0 client.
+ * Initializes the chart with a starting configuration.
  */
-export async function configureClient() {
-    auth0Client = await auth0.createAuth0Client({
-        domain: 'dev-ic7b0akl6h55q8wb.us.auth0.com', // <-- Replace with your Auth0 Domain
-        clientId: 'o7rNf1sgd3uDLZ6arqAW5TYP8R2grb3K', // <-- Replace with your Auth0 Client ID
-        authorizationParams: {
-            redirect_uri: window.location.origin,
-            audience: 'https://trading-platform-api'
+export function initChart() {
+    const ctx = document.getElementById('priceChart').getContext('2d');
+    priceChart = new Chart(ctx, {
+        type: 'line', // We want a line chart
+        data: {
+            labels: [], // Timestamps will go here
+            datasets: [{
+                label: 'BTC-USD',
+                data: [], // Prices will go here
+                borderColor: 'rgba(255, 159, 64, 1)',
+                backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4 // This makes the line smooth
+            }]
+        },
+        options: {
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'second',
+                        displayFormats: {
+                            second: 'h:mm:ss a'
+                        }
+                    },
+                    ticks: {
+                        color: '#e0e0e0'
+                    }
+                },
+                y: {
+                    beginAtZero: false,
+                    ticks: {
+                        color: '#e0e0e0',
+                        // Format the tick labels to look like currency
+                        callback: function(value, index, values) {
+                            return '$' + value.toLocaleString();
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
         }
     });
 }
 
 /**
- * Handles the login process by redirecting the user to the Auth0 login page.
+ * Updates the chart with a new price tick.
+ * @param {object} tick - The price tick object { price, timestamp }.
  */
-export async function login() {
-    await auth0Client.loginWithRedirect();
-}
+export function updateChart(tick) {
+    // Add the new data to the chart
+    priceChart.data.labels.push(tick.timestamp);
+    priceChart.data.datasets[0].data.push(tick.price);
 
-/**
- * Handles the logout process.
- */
-export async function logout() {
-    auth0Client.logout({
-        logoutParams: {
-            returnTo: window.location.origin
-        }
-    });
-}
-
-/**
- * Checks if the user is authenticated.
- * @returns {Promise<boolean>}
- */
-export async function isAuthenticated() {
-    return await auth0Client.isAuthenticated();
-}
-
-/**
- * Gets the access token for making secure API calls.
- * @returns {Promise<string>} The JWT access token.
- */
-export async function getAccessToken() {
-    return await auth0Client.getTokenSilently();
-}
-
-/**
- * This function should be called when the page loads to handle the
- * redirect back from Auth0 after login.
- */
-export async function handleRedirectCallback() {
-    const query = window.location.search;
-    if (query.includes("code=") && query.includes("state=")) {
-        await auth0Client.handleRedirectCallback();
-        window.history.replaceState({}, document.title, "/"); // Clean the URL
+    // To prevent the chart from becoming cluttered, we'll limit it
+    // to showing the last 60 data points (e.g., 60 seconds of data).
+    const maxDataPoints = 60;
+    if (priceChart.data.labels.length > maxDataPoints) {
+        priceChart.data.labels.shift(); // Remove the oldest label
+        priceChart.data.datasets[0].data.shift(); // Remove the oldest price data
     }
+
+    // This command tells Chart.js to redraw the chart with the new data
+    priceChart.update('none'); // 'none' for a smooth animation
+}
+export function plotHistoricalData(ticks) {
+    // Clear any existing live data
+    priceChart.data.labels = [];
+    priceChart.data.datasets[0].data = [];
+
+    // Populate the chart with the historical data
+    ticks.forEach(tick => {
+        priceChart.data.labels.push(tick.timestamp);
+        priceChart.data.datasets[0].data.push(tick.price);
+    });
+
+    // Redraw the chart
+    priceChart.update();
 }
