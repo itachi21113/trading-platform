@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (!stompClient) {
         const token = await getAccessToken();
-        const socket = new SockJS("http://localhost:8081/ws");
+        const socket = new SockJS("https://price-streamer-production.up.railway.app/ws");
         stompClient = Stomp.over(socket);
         const headers = { Authorization: `Bearer ${token}` };
 
@@ -127,7 +127,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     livePriceSpan.textContent = "Loading history...";
     try {
       const historicalTicks = await fetchSecurely(
-        "http://localhost:8081/history?symbol=BTC-USD&range=24h"
+        "https://price-streamer-production.up.railway.app/history?symbol=BTC-USD&range=24h"
       );
       plotHistoricalData(historicalTicks);
       if (historicalTicks.length > 0) {
@@ -156,7 +156,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const shortPeriod = document.getElementById("shortPeriod").value;
     const longPeriod = document.getElementById("longPeriod").value;
     try {
-      const url = `http://localhost:8081/backtest/sma-crossover?initialBalance=${initialBalance}&shortPeriod=${shortPeriod}&longPeriod=${longPeriod}&range=24h`;
+      const url = `https://price-streamer-production.up.railway.app/backtest/sma-crossover?initialBalance=${initialBalance}&shortPeriod=${shortPeriod}&longPeriod=${longPeriod}&range=24h`;
       const result = await fetchSecurely(url);
       const pnlClass = result.profitOrLoss >= 0 ? "profit" : "loss";
       backtestResultDiv.innerHTML = `
@@ -179,7 +179,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // --- Alerts Logic ---
   async function fetchAndDisplayAlerts() {
     try {
-      const alerts = await fetchSecurely("http://localhost:8081/api/alerts");
+      const alerts = await fetchSecurely("https://price-streamer-production.up.railway.app/api/alerts");
       activeAlertsList.innerHTML = "";
       if (alerts.length === 0) {
         activeAlertsList.innerHTML = "<li>No active alerts.</li>";
@@ -207,7 +207,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
     try {
-      await fetchSecurely("http://localhost:8081/api/alerts", {
+      await fetchSecurely("https://price-streamer-production.up.railway.app/api/alerts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ symbol, condition, targetPrice }),
