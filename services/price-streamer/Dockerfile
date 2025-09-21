@@ -24,4 +24,9 @@ RUN ./mvnw package -DskipTests
 EXPOSE 8081
 
 # The command to run the application when the container starts
-ENTRYPOINT ["java", "-jar", "target/price-streamer-0.0.1-SNAPSHOT.jar"]
+ENTRYPOINT ["java", \
+            "-Dspring.datasource.url=${SPRING_DATASOURCE_URL}", \
+            "-Dspring.datasource.username=${SPRING_DATASOURCE_USERNAME}", \
+            "-Dspring.datasource.password=${SPRING_DATASOURCE_PASSWORD}", \
+            "-Dspring.kafka.bootstrap-servers=${SPRING_KAFKA_BOOTSTRAP_SERVERS}", \
+            "-jar", "target/price-streamer-0.0.1-SNAPSHOT.jar"]
