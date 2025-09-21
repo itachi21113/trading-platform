@@ -42,7 +42,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         // This list MUST include your frontend's production URL
         configuration.setAllowedOrigins(List.of(
-                "https://frontend-production-e4c5.up.railway.app", // Production Frontend
+                "https://frontend-production-e4c5-up-railway-app", // Production Frontend
                 "http://127.0.0.1:5501",
                 "http://localhost:5501",
                 "http://localhost"
