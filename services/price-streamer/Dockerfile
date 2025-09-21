@@ -29,4 +29,7 @@ ENTRYPOINT ["java", \
             "-Dspring.datasource.username=${SPRING_DATASOURCE_USERNAME}", \
             "-Dspring.datasource.password=${SPRING_DATASOURCE_PASSWORD}", \
             "-Dspring.kafka.bootstrap-servers=${SPRING_KAFKA_BOOTSTRAP_SERVERS}", \
+            "-Dspring.kafka.properties.security.protocol=SASL_SSL", \
+            "-Dspring.kafka.properties.sasl.mechanism=SCRAM-SHA-256", \
+            "-Dspring.kafka.properties.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username='${KAFKA_USERNAME}' password='${KAFKA_PASSWORD}';", \
             "-jar", "target/price-streamer-0.0.1-SNAPSHOT.jar"]
