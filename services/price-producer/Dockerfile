@@ -27,6 +27,8 @@ EXPOSE 8080
 # The command to run the application when the container starts
 ENTRYPOINT ["java", \
             "-Dspring.kafka.bootstrap-servers=${SPRING_KAFKA_BOOTSTRAP_SERVERS}", \
+            "-Dspring.kafka.producer.key-serializer=org.apache.kafka.common.serialization.StringSerializer", \
+            "-Dspring.kafka.producer.value-serializer=org.springframework.kafka.support.serializer.JsonSerializer", \
             "-Dspring.kafka.properties.security.protocol=SASL_SSL", \
             "-Dspring.kafka.properties.sasl.mechanism=SCRAM-SHA-256", \
             "-Dspring.kafka.properties.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username='${KAFKA_USERNAME}' password='${KAFKA_PASSWORD}';", \
